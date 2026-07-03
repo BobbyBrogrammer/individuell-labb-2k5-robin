@@ -22,3 +22,5 @@ jobs:
 
       - name: Run tests
         run: mvn test -B
+        env:
+          GROQ_API_KEY: dummy-key-for-ci
