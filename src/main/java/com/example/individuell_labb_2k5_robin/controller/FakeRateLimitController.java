@@ -1,4 +1,4 @@
-package com.example.individuell_labb_1k5_robin.controller;
+package com.example.individuell_labb_2k5_robin.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

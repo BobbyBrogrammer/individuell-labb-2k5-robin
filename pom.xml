@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>individuell-labb-1k5-robin</artifactId>
+	<artifactId>individuell-labb-2k5-robin</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
+    <name>individuell-labb-2k5</name>
 	<description/>
 	<url/>
 	<licenses>

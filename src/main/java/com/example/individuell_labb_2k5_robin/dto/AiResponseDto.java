@@ -1,4 +1,4 @@
-package com.example.individuell_labb_1k5_robin.dto;
+package com.example.individuell_labb_2k5_robin.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

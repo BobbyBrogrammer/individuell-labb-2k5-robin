@@ -1,7 +1,7 @@
-package com.example.individuell_labb_1k5_robin.controller;
+package com.example.individuell_labb_2k5_robin.controller;
 
-import com.example.individuell_labb_1k5_robin.dto.AiResponseDto;
-import com.example.individuell_labb_1k5_robin.service.AiClientService;
+import com.example.individuell_labb_2k5_robin.dto.AiResponseDto;
+import com.example.individuell_labb_2k5_robin.service.AiClientService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

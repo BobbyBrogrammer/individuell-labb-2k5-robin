@@ -1,6 +1,6 @@
-package com.example.individuell_labb_1k5_robin.service;
+package com.example.individuell_labb_2k5_robin.service;
 
-import com.example.individuell_labb_1k5_robin.dto.AiResponseDto;
+import com.example.individuell_labb_2k5_robin.dto.AiResponseDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -124,28 +127,92 @@ public class AiClientService {
 //    }
 
     // Step 5: Begränsa Hallucinationer & Validera Struktur
-    public AiResponseDto analyzeText(String userText) {
-        String systemPrompt = """
-                You are a sentiment analysis engine.
-                Analyze the sentiment of the user's text and respond ONLY a valid JSON object.
-                Do not include markdown formatting, code blocks, or conversational text.
-                The JSON must follow this exact schema:
-                {"sentiment": "POSITIVE|NEGATIVE|NEUTRAL",
-                "score": 0.0-1.0,
-                "summary": "one sentence explanation"}
-                """;
+//    public AiResponseDto analyzeText(String userText) {
+//        String systemPrompt = """
+//                You are a sentiment analysis engine.
+//                Analyze the sentiment of the user's text and respond ONLY a valid JSON object.
+//                Do not include markdown formatting, code blocks, or conversational text.
+//                The JSON must follow this exact schema:
+//                {"sentiment": "POSITIVE|NEGATIVE|NEUTRAL",
+//                "score": 0.0-1.0,
+//                "summary": "one sentence explanation"}
+//                """;
+//
+//        String requestBody = """
+//                {
+//                "model": "llama-3.1-8b-instant",
+//                "temperature": 0.1,
+//                "messages": [
+//                {"role": "system", "content": "%s"},
+//                {"role": "user", "content": "%s"}
+//                ]
+//                }
+//                """.formatted(systemPrompt.replace("\"", "\\\"")
+//                .replace("\n", "\\n"), userText);
+//
+//        int retries = 3;
+//        long delay = 1000;
+//
+//        for (int i = 0; i < retries; i++) {
+//            ResponseEntity<String> response = restClient.post()
+//                    .uri("/chat/completions")
+//                    //.uri("/fake/analyze")
+//                    //.uri("/fake/hallucinate") //Step 6: Framtvinga Hallucination
+//                    .header("Authorization", "Bearer " + apiKey)
+//                    .body(requestBody)
+//                    .retrieve()
+//                    .onStatus(status ->
+//                            status.value() == 429, (req, res) -> {})
+//                    .toEntity(String.class);
+//
+//            if (response.getStatusCode().is2xxSuccessful()) {
+//                try {
+//                    String rawBody = response.getBody();
+//                    JsonNode root = objectMapper.readTree(rawBody);
+//                    String aiContent = root.path("choices").get(0)
+//                            .path("message").path("content").asText();
+//                    return objectMapper.readValue(aiContent, AiResponseDto.class);
+//                } catch (JsonProcessingException ex) {
+//                    log.warn("Failed to parse AI response, returning fallback: {}", ex.getMessage());
+//                    return AiResponseDto.fallback();
+//                }
+//            }
+//            if (response.getStatusCode().value() == 429) {
+//                log.warn("Rate limit hit (429), retrying in {} ms... (attempt {}/{})", delay, i + 1, retries);
+//                try {
+//                    Thread.sleep(delay);
+//                } catch (InterruptedException ex) {
+//                    Thread.currentThread().interrupt();
+//                }
+//                delay *= 2;
+//            }
+//        }
+//        throw new RuntimeException("Failed after " + retries + " retries due to rate limiting.");
+//    }
 
-        String requestBody = """
-                {
-                "model": "llama-3.1-8b-instant",
-                "temperature": 0.1,
-                "messages": [
-                {"role": "system", "content": "%s"},
-                {"role": "user", "content": "%s"}
-                ]
-                }
-                """.formatted(systemPrompt.replace("\"", "\\\"")
-                .replace("\n", "\\n"), userText);
+    // Step 1 - Labb2k5 - Korrigera String format till Jackson
+    public AiResponseDto analyzeText(String userText) {
+        String systemPrompt = "You are a sentiment analysis engine. " +
+                "Analyze the sentiment of the user's text and respond ONLY a valid JSON object. " +
+                "Do not include markdown formatting, code blocks, or conversational text. " +
+                "The JSON must follow this exact schema: " +
+                "{\"sentiment\": \"POSITIVE|NEGATIVE|NEUTRAL\", \"score\": 0.0-1.0, \"summary\": \"one sentence explanation\"}";
+
+        Map<String, Object> requestBody = Map.of(
+                "model", "llama-3.1-8b-instant",
+                "temperature", 0.1,
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userText)
+                )
+        );
+
+        String requestBodyJson;
+        try {
+            requestBodyJson = objectMapper.writeValueAsString(requestBody);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize request body", e);
+        }
 
         int retries = 3;
         long delay = 1000;
@@ -153,13 +220,10 @@ public class AiClientService {
         for (int i = 0; i < retries; i++) {
             ResponseEntity<String> response = restClient.post()
                     .uri("/chat/completions")
-                    //.uri("/fake/analyze")
-                    //.uri("/fake/hallucinate") //Step 6: Framtvinga Hallucination
                     .header("Authorization", "Bearer " + apiKey)
-                    .body(requestBody)
+                    .body(requestBodyJson)
                     .retrieve()
-                    .onStatus(status ->
-                            status.value() == 429, (req, res) -> {})
+                    .onStatus(status -> status.value() == 429, (req, res) -> {})
                     .toEntity(String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
