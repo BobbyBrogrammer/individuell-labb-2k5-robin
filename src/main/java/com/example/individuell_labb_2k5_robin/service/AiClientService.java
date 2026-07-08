@@ -24,7 +24,11 @@ public class AiClientService {
 
     private RestClient restClient;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public AiClientService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     public void validateApiKey() {
