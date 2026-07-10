@@ -23,11 +23,12 @@ jobs:
       - name: Run tests
         run: mvn test -B
         env:
+          # En Dummy-nyckel som används för att applikationen kräver "GROQ_API_KEY" vid start
           GROQ_API_KEY: dummy-key-for-ci
 
   security-scan:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: build-and-test # Körs bara om testerna går igenom
 
     steps:
       - name: Checkout code
@@ -40,19 +41,20 @@ jobs:
           distribution: 'temurin'
 
       - name: Run OWASP Dependency-Check
+        # "continue-on-error" gör att pipelinen fortsätter även om sårbarheter hittas
         run: mvn dependency-check:check "-Dnvd.api.key=${{ secrets.NVD_API_KEY }}"
         continue-on-error: true
 
       - name: Upload Dependency-Check report
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() # Gör att rapporten sparas oavsett om steget failar eller inte
         with:
           name: dependency-check-report
           path: target/dependency-check-report.html
 
   docker-build-and-push:
     runs-on: ubuntu-latest
-    needs: security-scan
+    needs: security-scan # Gör att den aldrig publicerar utan säkerhetsskanning körts
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout code
@@ -61,6 +63,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
+          # Credentials som hanteras säkert via GitHub Secrets
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
